@@ -13,6 +13,19 @@ build_as_root() {
 build_as_run_user() {
     _sirepo_pip_install pykern "$PYKERN_BRANCH"
     _sirepo_pip_install sirepo "$SIREPO_BRANCH"
+    declare d=$build_run_user_home/.local/lib
+    tar -C "$d" -xJf "$build_guest_conf/mpich-lib-2.2.tar.xz"
+    # Clear injected run-time (only need to reset LD_LIBRARY_PATH).
+    # home-env doesn't add mpi_lib but an absolute clear works best.
+    # Can't be done by a pre_bivio_bashrc, because zz-10-bashrc.sh
+    # has a check for empty LD_LIBRARY_PATH.
+    # We only install srw so restrict sim_types to avoid import issues.
+    cat >> $HOME/.post_bivio_bashrc <<EOF
+export LD_LIBRARY_PATH='$d'
+export SIREPO_FEATURE_CONFIG_MODERATED_SIM_TYPES=
+export SIREPO_FEATURE_CONFIG_PROPRIETARY_SIM_TYPES=
+export SIREPO_FEATURE_CONFIG_SIM_TYPES=srw
+EOF
 }
 
 _sirepo_nersc_copy_of_common_nersc() {
